@@ -37,15 +37,15 @@ services:
     command: |
       "
       sleep 3
-      kafka-topics --bootstrap-server kafka:29092 --list
+      kafka-topics --bootstrap-server ${BOOTSTRAP_SERVERS} --list
 
       echo -e 'Creating kafka topics'
-      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic incoming-transactions --replication-factor 1 --partitions 3
-      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic privileged-transactions --replication-factor 1 --partitions 3
-      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic standard-transactions --replication-factor 1 --partitions 3
+      kafka-topics --bootstrap-server ${BOOTSTRAP_SERVERS} --create --if-not-exists --topic ${CONSUMER_TOPIC} --replication-factor 1 --partitions 3
+      kafka-topics --bootstrap-server ${BOOTSTRAP_SERVERS} --create --if-not-exists --topic ${CONSUMER_TOPIC_PRIV} --replication-factor 1 --partitions 3
+      kafka-topics --bootstrap-server ${BOOTSTRAP_SERVERS} --create --if-not-exists --topic ${CONSUMER_TOPIC_STD} --replication-factor 1 --partitions 3
 
       echo -e 'Successfully created the following topics:'
-      kafka-topics --bootstrap-server kafka:29092 --list
+      kafka-topics --bootstrap-server ${BOOTSTRAP_SERVERS} --list
       "
 
   redis:

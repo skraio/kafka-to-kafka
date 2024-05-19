@@ -22,33 +22,37 @@ func (app *application) processMessage(kafkaMessage *kafka.Message) ([]byte, str
 		return nil, "", err
 	}
 
-    topic := app.filter(message)
-    transformedMessage := app.transform(message)
+	topic, err := app.filter(message)
+	if err != nil {
+		return nil, "", err
+	}
 
-    if !app.deduplicate(transformedMessage) {
-        return []byte{}, "", nil
-    }
+	transformedMessage := app.transform(message)
+	if err := app.deduplicate(transformedMessage); err != nil {
+		return nil, "", err
+	}
 
 	result, err := json.Marshal(transformedMessage)
 	if err != nil {
-		fmt.Printf("%% Error marshalling transformed message: %v\n", err)
 		return nil, "", err
 	}
 
 	return result, topic, nil
 }
 
-func (app *application) filter(message Message) string {
+func (app *application) filter(message Message) (string, error) {
 	filterValue1 := app.config.kafkaMessage.config.Filtering.Value1
 	filterValue2 := app.config.kafkaMessage.config.Filtering.Value2
 
 	switch message.Status {
 	case filterValue1:
-		return app.config.kafka.producer.topicStandard
+		return app.config.kafka.producer.topicStandard, nil
 	case filterValue2:
-		return app.config.kafka.producer.topicPrivileged
+		return app.config.kafka.producer.topicPrivileged, nil
 	}
-    return ""
+
+    err := fmt.Errorf("message does not meet filtering criteria")
+	return "", err
 }
 
 func (app *application) transform(message Message) map[string]interface{} {
@@ -66,16 +70,19 @@ func (app *application) transform(message Message) map[string]interface{} {
 	return result
 }
 
-func (app *application) deduplicate(message map[string]interface{}) bool {
+func (app *application) deduplicate(message map[string]interface{}) error {
 	ctx := context.Background()
 	key := fmt.Sprintf("%s", message[app.config.kafkaMessage.config.Deduplication.Key])
 	duration := time.Duration(app.config.kafkaMessage.config.Deduplication.TimeSpanSeconds) * time.Second
 
-	exists, err := app.redisClient.SetNX(ctx, key, true, duration).Result()
+	result, err := app.redisClient.SetNX(ctx, key, true, duration).Result()
 	if err != nil {
-		fmt.Printf("%% Error accessing Redis: %v\n", err)
-		return false
+		return err
 	}
 
-	return exists
+	if !result {
+		return fmt.Errorf("duplicate message detected")
+	}
+
+	return nil
 }

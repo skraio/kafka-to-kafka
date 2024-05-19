@@ -62,11 +62,6 @@ type application struct {
 }
 
 func main() {
-	// err := godotenv.Load()
-	// if err != nil {
-	// 	fmt.Println("Error loading .env file")
-	// }
-
 	var cfg config
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
@@ -112,6 +107,7 @@ func main() {
 		os.Exit(1)
 	}
 	cfg.kafkaMessage.config = messageConfig
+	logger.Info("config.json loaded")
 
 	redisClient, err := openRD(cfg)
 	if err != nil {
