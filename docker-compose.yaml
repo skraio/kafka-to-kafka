@@ -68,4 +68,5 @@ services:
       KAFKA_BROKER: kafka:29092
       REDIS_HOST: redis
       REDIS_PORT: 6379
+    env_file: .env
     command: ["./main"]

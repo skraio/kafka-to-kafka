@@ -1,3 +1,12 @@
 {
-
+  "filtering": {
+    "key": "status",
+    "value1": "standard",
+    "value2": "privileged"
+  },
+  "transformation": ["id", "login", "payment"],
+  "deduplication": {
+    "key": "login",
+    "time_span_seconds": 30
+  }
 }
